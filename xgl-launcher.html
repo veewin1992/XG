@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>XGL DATABASE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+
+<!-- Tab bar favicon: "XG" on gradient rounded square -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='64' y2='64' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%233b6fe8'/%3E%3Cstop offset='1' stop-color='%237c3aed'/%3E%3C/linearGradient%3E%3ClinearGradient id='sh' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop stop-color='white' stop-opacity='0.14'/%3E%3Cstop offset='1' stop-color='white' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='15' fill='url(%23g)'/%3E%3Crect width='64' height='32' rx='15' fill='url(%23sh)'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Syne%2Csystem-ui%2Csans-serif' font-weight='800' font-size='27' fill='white' letter-spacing='-1.5'%3EXG%3C/text%3E%3C/svg%3E"/>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --est:#5b9cf6;
+  --cst:#f5a623;
+  --mst:#3ecf8e;
+  --pst:#b07fff;
+  --bg:#07090f;
+  --card-bg:rgba(255,255,255,0.038);
+  --card-bg-h:rgba(255,255,255,0.072);
+  --border:rgba(255,255,255,0.065);
+  --border-h:rgba(255,255,255,0.18);
+  --text:#e8ecf7;
+  --muted:#6b7496;
+  --faint:#2e3350;
+  --font:'Syne',system-ui,sans-serif;
+  --mono:'DM Mono','Cascadia Code',monospace;
+}
+
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased}
+
+body{
+  background-image:
+    radial-gradient(ellipse 70% 50% at 10% -5%,  rgba(91,156,246,.12) 0%,transparent 65%),
+    radial-gradient(ellipse 55% 40% at 95% 105%,  rgba(176,127,255,.10) 0%,transparent 65%),
+    radial-gradient(ellipse 45% 35% at 85%  5%,   rgba(62,207,142,.07) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 30% at 20% 90%,   rgba(245,166,35,.06) 0%,transparent 60%);
+  min-height:100vh;
+}
+
+.shell{max-width:1040px;margin:0 auto;padding:48px 28px 64px}
+
+/* ── Top bar ── */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:44px;padding-bottom:24px;border-bottom:1px solid var(--border);
+}
+
+.brand{display:flex;align-items:center;gap:14px}
+
+/* XG Logo block */
+.logo-wrap{
+  position:relative;
+  width:48px;height:48px;border-radius:14px;
+  background:linear-gradient(145deg,#3b6fe8 0%,#5b4ae8 50%,#7c3aed 100%);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  box-shadow:
+    0 4px 24px rgba(91,156,246,.28),
+    0 1px 0 rgba(255,255,255,.15) inset,
+    0 -1px 0 rgba(0,0,0,.25) inset;
+  overflow:hidden;
+}
+/* top-half gloss */
+.logo-wrap::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:52%;
+  background:linear-gradient(180deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,0) 100%);
+  border-radius:14px 14px 0 0;
+}
+.logo-text{
+  font-family:var(--font);
+  font-size:18px;font-weight:800;
+  color:#fff;
+  letter-spacing:-1.2px;
+  line-height:1;
+  position:relative;z-index:1;
+  text-shadow:0 1px 6px rgba(0,0,0,.35);
+}
+
+.brand-text{display:flex;flex-direction:column;gap:5px}
+
+/* "XGL LAUNCHER" — same treatment as sub: all-caps, tracked, clean */
+.brand-name{
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:2.8px;
+  text-transform:uppercase;
+  color:var(--text);
+  line-height:1;
+}
+.brand-sub{
+  font-size:9.5px;
+  font-weight:500;
+  color:var(--muted);
+  letter-spacing:1.8px;
+  text-transform:uppercase;
+}
+
+.topbar-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+#clock{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--text);letter-spacing:.4px}
+.date-line{font-size:11px;color:var(--muted);letter-spacing:.3px}
+
+/* ── Controls row: legend left, filters right ── */
+.controls-row{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:16px;flex-wrap:wrap;
+  margin-bottom:22px;
+}
+
+.legend{display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+.leg{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--muted);font-weight:500;letter-spacing:.3px}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ── Filter pills ── */
+.filters{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+
+.filter-btn{
+  font-family:var(--font);
+  font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  padding:5px 12px;border-radius:30px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.04);
+  color:var(--muted);
+  cursor:pointer;
+  transition:background 150ms ease,border-color 150ms ease,color 150ms ease,box-shadow 150ms ease,transform 100ms ease;
+}
+.filter-btn:hover{background:rgba(255,255,255,.08);border-color:var(--border-h);color:var(--text)}
+.filter-btn:active{transform:scale(.93)}
+
+/* ALL active */
+.filter-btn[data-filter="ALL"].active{
+  background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.22);color:var(--text);
+  box-shadow:0 0 0 1px rgba(255,255,255,.06);
+}
+/* TZ-tinted active states */
+.filter-btn[data-filter="EST"].active{background:rgba(91,156,246,.16);border-color:rgba(91,156,246,.42);color:var(--est);box-shadow:0 0 10px rgba(91,156,246,.15)}
+.filter-btn[data-filter="CST"].active{background:rgba(245,166,35,.14);border-color:rgba(245,166,35,.40);color:var(--cst);box-shadow:0 0 10px rgba(245,166,35,.12)}
+.filter-btn[data-filter="MST"].active{background:rgba(62,207,142,.14);border-color:rgba(62,207,142,.40);color:var(--mst);box-shadow:0 0 10px rgba(62,207,142,.12)}
+.filter-btn[data-filter="PST"].active{background:rgba(176,127,255,.14);border-color:rgba(176,127,255,.40);color:var(--pst);box-shadow:0 0 10px rgba(176,127,255,.12)}
+
+/* ── Section label ── */
+.section-label{
+  font-size:10.5px;font-weight:600;letter-spacing:1.2px;
+  text-transform:uppercase;color:var(--faint);
+  margin-bottom:14px;
+}
+
+/* ── Grid ── */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:10px;
+}
+
+/* ── Card ── */
+.card{
+  position:relative;
+  display:flex;flex-direction:column;align-items:flex-start;gap:10px;
+  padding:16px 16px 14px;
+  background:var(--card-bg);border:1px solid var(--border);border-radius:14px;
+  cursor:pointer;overflow:hidden;text-decoration:none;color:inherit;
+  opacity:0;transform:translateY(10px) scale(.97);
+  animation:fadeUp 380ms cubic-bezier(.22,.68,0,1.2) forwards;
+  transition:background 180ms ease,border-color 180ms ease,
+    transform 170ms cubic-bezier(.22,.68,0,1.2),box-shadow 180ms ease;
+}
+@keyframes fadeUp{to{opacity:1;transform:none}}
+
+.card.hidden{display:none}
+
+.card::before{
+  content:'';position:absolute;inset:0;opacity:0;
+  border-radius:inherit;transition:opacity 220ms ease;pointer-events:none;
+}
+.card[data-tz="EST"]::before{background:radial-gradient(ellipse at 0% 110%,rgba(91,156,246,.20) 0%,transparent 70%)}
+.card[data-tz="CST"]::before{background:radial-gradient(ellipse at 0% 110%,rgba(245,166,35,.18) 0%,transparent 70%)}
+.card[data-tz="MST"]::before{background:radial-gradient(ellipse at 0% 110%,rgba(62,207,142,.18) 0%,transparent 70%)}
+.card[data-tz="PST"]::before{background:radial-gradient(ellipse at 0% 110%,rgba(176,127,255,.20) 0%,transparent 70%)}
+
+.card:hover{
+  background:var(--card-bg-h);border-color:var(--border-h);
+  transform:translateY(-3px) scale(1.018);
+  box-shadow:0 12px 32px rgba(0,0,0,.40),0 3px 10px rgba(0,0,0,.25);
+}
+.card:hover::before{opacity:1}
+.card:active{transform:scale(.96);transition-duration:70ms}
+
+.card-top{width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
+.card-name{font-size:14px;font-weight:700;color:var(--text);line-height:1.25;letter-spacing:-.1px}
+.card-code{
+  font-family:var(--mono);font-size:9.5px;font-weight:500;letter-spacing:.6px;
+  color:var(--muted);background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.065);border-radius:5px;
+  padding:2.5px 6px;flex-shrink:0;line-height:1.4;margin-top:1px;
+  transition:color 180ms ease;
+}
+.card:hover .card-code{color:var(--text)}
+
+.card-footer{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:600;letter-spacing:.45px;text-transform:uppercase}
+.tz-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+.card[data-tz="EST"] .tz-dot{background:var(--est);box-shadow:0 0 6px rgba(91,156,246,.8)}
+.card[data-tz="CST"] .tz-dot{background:var(--cst);box-shadow:0 0 6px rgba(245,166,35,.8)}
+.card[data-tz="MST"] .tz-dot{background:var(--mst);box-shadow:0 0 6px rgba(62,207,142,.8)}
+.card[data-tz="PST"] .tz-dot{background:var(--pst);box-shadow:0 0 6px rgba(176,127,255,.8)}
+
+.card[data-tz="EST"] .card-footer{color:rgba(91,156,246,.80)}
+.card[data-tz="CST"] .card-footer{color:rgba(245,166,35,.80)}
+.card[data-tz="MST"] .card-footer{color:rgba(62,207,142,.80)}
+.card[data-tz="PST"] .card-footer{color:rgba(176,127,255,.80)}
+
+.arrow{
+  position:absolute;bottom:13px;right:13px;
+  width:15px;height:15px;
+  opacity:0;transform:translate(-3px,3px);
+  transition:opacity 180ms ease,transform 180ms ease;
+  color:var(--muted);
+}
+.card:hover .arrow{opacity:1;transform:none}
+
+/* ── Empty state ── */
+.empty{
+  display:none;
+  grid-column:1/-1;
+  padding:48px 0;text-align:center;
+  color:var(--faint);font-size:12px;letter-spacing:.5px;text-transform:uppercase;
+}
+.empty.show{display:block}
+
+/* ── Footer ── */
+.page-footer{
+  margin-top:48px;padding-top:20px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.footer-txt{font-size:11px;color:var(--faint);letter-spacing:.4px;text-transform:uppercase}
+.status{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
+.pulse{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--mst);box-shadow:0 0 8px rgba(62,207,142,.9);
+  animation:blink 2.6s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.6)}}
+
+/* ── Responsive ── */
+@media(max-width:560px){
+  .shell{padding:28px 16px 48px}
+  .topbar{margin-bottom:28px}
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .topbar-right{display:none}
+  .controls-row{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo-wrap">
+        <span class="logo-text">XG</span>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">XGL Launcher</span>
+        <span class="brand-sub">Regional Market Portals</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span id="clock">--:--:--</span>
+      <span class="date-line" id="dateline"></span>
+    </div>
+  </div>
+
+  <!-- Legend (left) + Filter pills (right) -->
+  <div class="controls-row">
+    <div class="legend">
+      <span class="leg"><span class="leg-dot" style="background:var(--est)"></span>Eastern (EST)</span>
+      <span class="leg"><span class="leg-dot" style="background:var(--cst)"></span>Central (CST)</span>
+      <span class="leg"><span class="leg-dot" style="background:var(--mst)"></span>Mountain (MST)</span>
+      <span class="leg"><span class="leg-dot" style="background:var(--pst)"></span>Pacific (PST)</span>
+    </div>
+    <div class="filters" id="filters">
+      <button class="filter-btn active" data-filter="ALL">All</button>
+      <button class="filter-btn" data-filter="EST">EST</button>
+      <button class="filter-btn" data-filter="CST">CST</button>
+      <button class="filter-btn" data-filter="MST">MST</button>
+      <button class="filter-btn" data-filter="PST">PST</button>
+    </div>
+  </div>
+
+  <p class="section-label" id="section-label">19 Regions — click to open</p>
+
+  <!-- Grid (built by JS) -->
+  <div class="grid" id="grid">
+    <p class="empty" id="empty">No markets for this timezone.</p>
+  </div>
+
+  <!-- Footer -->
+  <div class="page-footer">
+    <span class="footer-txt">XGL · Regional Portals v1.0</span>
+    <span class="status"><span class="pulse"></span>All systems online</span>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+//  DATABASE CONFIG — edit name / short / url / tz here
+// ============================================================
+var DATABASES = [
+  { name:"Atlanta",       short:"ATL", url:"https://atl-xgl.cable.comcast.com/", tz:"EST" },
+  { name:"California",    short:"CAL", url:"https://cal-xgl.cable.comcast.com/", tz:"PST" },
+  { name:"ChattKnox",     short:"CK",  url:"https://ck-xgl.cable.comcast.com/",  tz:"EST" },
+  { name:"Chicago",       short:"CHI", url:"https://chi-xgl.cable.comcast.com/", tz:"CST" },
+  { name:"Detroit",       short:"DET", url:"https://det-xgl.cable.comcast.com/", tz:"EST" },
+  { name:"Houston",       short:"HOU", url:"https://hou-xgl.cable.comcast.com/", tz:"CST" },
+  { name:"Jackson",       short:"JAC", url:"https://jac-xgl.cable.comcast.com/", tz:"CST" },
+  { name:"Jacksonville",  short:"JAX", url:"https://jax-xgl.cable.comcast.com/", tz:"EST" },
+  { name:"Liberty",       short:"LIB", url:"https://lib-xgl.cable.comcast.com/", tz:"EST" },
+  { name:"Memphis",       short:"MEM", url:"https://mem-xgl.cable.comcast.com/", tz:"CST" },
+  { name:"Mid-Atlantic",  short:"MID", url:"https://mid-xgl.cable.comcast.com/", tz:"EST" },
+  { name:"Mountain",      short:"MTN", url:"https://mtn-xgl.cable.comcast.com/", tz:"MST" },
+  { name:"Nashville",     short:"NAS", url:"https://nas-xgl.cable.comcast.com/", tz:"CST" },
+  { name:"New England",   short:"NEW",  url:"https://ne-xgl.cable.comcast.com/",  tz:"EST" },
+  { name:"New York",      short:"NY",  url:"https://ny-xgl.cable.comcast.com/",  tz:"EST" },
+  { name:"NorthWest",     short:"NW",  url:"https://nw-xgl.cable.comcast.com/",  tz:"PST" },
+  { name:"Sarasota",      short:"SAR", url:"https://sar-xgl.cable.comcast.com/", tz:"EST" },
+  { name:"South Florida", short:"SFL", url:"https://sfl-xgl.cable.comcast.com/", tz:"EST" },
+  { name:"Twin Cities",   short:"TC",  url:"https://tc-xgl.cable.comcast.com/",  tz:"CST" }
+];
+
+var TZ_LABELS = { EST:"Eastern", CST:"Central", MST:"Mountain", PST:"Pacific" };
+
+// ── Build cards
+var grid   = document.getElementById('grid');
+var emptyEl = document.getElementById('empty');
+
+DATABASES.forEach(function(db, i) {
+  var a = document.createElement('a');
+  a.className = 'card';
+  a.href = db.url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.setAttribute('data-tz', db.tz);
+  a.style.animationDelay = (i * 45) + 'ms';
+  a.innerHTML =
+    '<div class="card-top">' +
+      '<span class="card-name">' + db.name + '</span>' +
+      '<span class="card-code">' + db.short + '</span>' +
+    '</div>' +
+    '<div class="card-footer">' +
+      '<span class="tz-dot"></span>' +
+      (TZ_LABELS[db.tz] || db.tz) +
+    '</div>' +
+    '<svg class="arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">' +
+      '<path d="M3 13L13 3M7 3h6v6"/>' +
+    '</svg>';
+  grid.insertBefore(a, emptyEl);
+});
+
+// ── Filter
+var cards  = document.querySelectorAll('.card');
+var label  = document.getElementById('section-label');
+
+document.getElementById('filters').addEventListener('click', function(e) {
+  var btn = e.target.closest('.filter-btn');
+  if (!btn) return;
+
+  var filter = btn.getAttribute('data-filter');
+
+  document.querySelectorAll('.filter-btn').forEach(function(b) {
+    b.classList.toggle('active', b === btn);
+  });
+
+  var visible = 0;
+  var delay = 0;
+  cards.forEach(function(card) {
+    var match = filter === 'ALL' || card.getAttribute('data-tz') === filter;
+    if (match) {
+      card.classList.remove('hidden');
+      card.style.animation = 'none';
+      void card.offsetWidth;
+      card.style.animation = '';
+      card.style.animationDelay = (delay * 42) + 'ms';
+      delay++;
+      visible++;
+    } else {
+      card.classList.add('hidden');
+    }
+  });
+
+  label.textContent = filter === 'ALL'
+    ? '19 Regions — click to open'
+    : visible + ' Region' + (visible !== 1 ? 's' : '') + ' — ' + filter + ' · ' + (TZ_LABELS[filter] || '') + ' Time';
+
+  emptyEl.classList.toggle('show', visible === 0);
+});
+
+// ── Clock
+function tick() {
+  var now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  document.getElementById('dateline').textContent =
+    now.toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'});
+}
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
